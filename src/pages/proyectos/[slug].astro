@@ -1,0 +1,214 @@
+---
+import { getCollection, render } from 'astro:content';
+// Si tienes un Layout, impórtalo así (ajusta si el nombre es distinto):
+// import Layout from '../../layouts/Layout.astro';
+
+// 1. ESTA FUNCIÓN ES LA QUE FALTA O TIENE EL ERROR:
+export async function getStaticPaths() {
+  const proyectos = await getCollection('proyectos');
+  return proyectos.map(p => ({
+    params: { slug: p.slug },
+    props: { p },
+  }));
+}
+
+// 2. OBTENER PROPS (Esto se ejecuta para cada página generada)
+const { p } = Astro.props;
+const { Content } = await render(p);
+const meta = [p.data.rol, p.data.estado, p.data.fecha].filter(Boolean).join(" • ");
+---
+
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <title>{p.data.titulo}</title>
+</head>
+<body>
+    <div class="parallax" aria-hidden="true">
+        <div class="parallax-layer layer-stars" data-speed="0.15"></div>
+        <div class="parallax-layer layer-clouds" data-speed="0.3"></div>
+        <div class="parallax-layer layer-hills" data-speed="0.45"></div>
+    </div>
+    <main class="project-page">
+        <a href="/" class="back-link">← Volver al inicio</a>
+        <header class="project-hero">
+            <h1 class="minecraft-title">{p.data.titulo}</h1>
+            {meta && <p class="project-meta">{meta}</p>}
+            <div class="tech-stack">
+                {p.data.tecnologias.map(tech => (
+                    <span class="tag">{tech}</span>
+                ))}
+            </div>
+        </header>
+        <article class="project-content">
+            <Content />
+        </article>
+    </main>
+</body>
+</html>
+
+<script>
+    const layers = document.querySelectorAll(".parallax-layer");
+    const onScroll = () => {
+        const y = window.scrollY || 0;
+        layers.forEach((layer) => {
+            const speed = Number(layer.getAttribute("data-speed") || 0);
+            layer.style.transform = `translate3d(0, ${y * speed}px, 0)`;
+        });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+</script>
+
+<style is:global>
+    @import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;600;700&display=swap");
+    :root {
+        --primary: #ffd166;
+        --text: #f7f4e9;
+        --text-muted: #d0c7b5;
+        --card-bg: rgba(46, 35, 24, 0.75);
+        --bg-overlay: rgba(18, 28, 44, 0.25);
+        --glass-border: rgba(255, 209, 102, 0.35);
+        --pixel-border: #3a2a1a;
+    }
+
+    body {
+        margin: 0;
+        min-height: 100vh;
+        background-image:
+            linear-gradient(var(--bg-overlay), var(--bg-overlay)),
+            url("/cat rengoku.jpg");
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        background-repeat: no-repeat;
+        background-color: #0b1020;
+        font-family: "Inter", system-ui, sans-serif;
+        color: var(--text);
+        line-height: 1.7;
+    }
+
+    .parallax {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        overflow: hidden;
+    }
+
+    .parallax-layer {
+        position: absolute;
+        inset: -10% 0 0 0;
+        background-repeat: repeat;
+        will-change: transform;
+        opacity: 0.6;
+    }
+
+    .layer-stars {
+        background-image:
+            radial-gradient(#fff 1px, transparent 1.5px),
+            radial-gradient(#ffd166 1px, transparent 1.5px);
+        background-size: 120px 120px, 200px 200px;
+        background-position: 0 0, 40px 80px;
+        opacity: 0.35;
+    }
+
+    .layer-clouds {
+        background-image:
+            radial-gradient(rgba(255, 255, 255, 0.35) 20%, transparent 60%);
+        background-size: 240px 120px;
+        background-position: 0 30px;
+        opacity: 0.5;
+    }
+
+    .layer-hills {
+        background-image:
+            linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(28, 20, 12, 0.6) 70%),
+            repeating-linear-gradient(
+                90deg,
+                rgba(70, 160, 56, 0.35) 0 24px,
+                rgba(75, 49, 28, 0.45) 24px 48px
+            );
+        background-size: 100% 100%, 160px 80px;
+        background-position: bottom;
+        opacity: 0.7;
+        inset: 30% 0 0 0;
+    }
+
+    .project-page {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 48px 20px 64px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .back-link {
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .project-hero {
+        padding: 22px 22px 18px;
+        border-radius: 16px;
+        background: var(--card-bg);
+        border: 2px solid var(--pixel-border);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .minecraft-title {
+        font-family: "Press Start 2P", system-ui, sans-serif;
+        font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+        margin: 0 0 12px;
+        text-shadow:
+            0 0 6px rgba(255, 209, 102, 0.45),
+            0 0 14px rgba(255, 209, 102, 0.2);
+    }
+
+    .project-meta {
+        margin: 0 0 14px;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+    }
+
+    .tech-stack {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(28, 20, 12, 0.9);
+        color: var(--primary);
+        font-weight: 700;
+        font-size: 0.8rem;
+        padding: 4px 10px;
+        border-radius: 18px;
+        border: 2px solid var(--pixel-border);
+    }
+
+    .project-content {
+        padding: 20px 22px;
+        border-radius: 16px;
+        background: var(--card-bg);
+        border: 2px solid var(--pixel-border);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        font-size: 1.02rem;
+    }
+
+    .project-content h2 {
+        margin-top: 1.4rem;
+        color: var(--primary);
+    }
+
+    .project-content ul {
+        padding-left: 1.2rem;
+    }
+</style>
